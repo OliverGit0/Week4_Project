@@ -5,6 +5,7 @@ import { createAppError } from '../utils/createAppError.js';
 import Question from '../models/Question.js';
 import Answer from '../models/Answer.js';
 import Tag from '../models/Tag.js';
+import { handleVote } from './voteService.js';
 
 export const getAllQuestionsService = async () => {
     const questions = await Question.find()
@@ -158,3 +159,25 @@ export const deleteQuestionService = async ({ id, loggedInUser }) => {
 
     return question;
 };
+
+
+    //f. upvoteQuestionService / downvoteQuestionService - Given the arguments questionId and
+    //userId, call the voteService.handleVote function with the appropriate arguments. Throw a 400
+    //AppError if the vote operation returns a falsy result. Return the updated question document
+    //returned by voteService.handleVote.
+
+    export const upvoteQuestionService = async ({ questionId, userId }) => {
+        const updatedQuestion = await handleVote(Question, questionId, userId, 'upvote');
+        if (!updatedQuestion) {
+            throw createAppError('Failed to upvote question', 400);
+        }
+        return updatedQuestion;
+    };
+
+    export const downvoteQuestionService = async ({ questionId, userId }) => {
+        const updatedQuestion = await handleVote(Question, questionId, userId, 'downvote');
+        if (!updatedQuestion) {
+            throw createAppError('Failed to downvote question', 400);
+        }
+        return updatedQuestion;
+    };
