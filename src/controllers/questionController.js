@@ -9,6 +9,8 @@ import {
     createQuestionService,
     updateQuestionService,
     deleteQuestionService,
+    upvoteQuestionService,
+    downvoteQuestionService,
 } from '../services/questionService.js';
 
 export const getAllQuestions = async (req, res) => {
@@ -86,6 +88,36 @@ export const deleteQuestion = async (req, res) => {
     res.status(200).json({
         success: true,
         message: 'Question deleted successfully',
+        data: question,
+    });
+};
+
+//f. upvoteQuestion and downvoteQuestion – Extract the document id from req.params and
+//userId from req.user.id (set by the authenticate middleware). Call the appropriate service
+//function to upvote/downvote the question.
+
+export const upvoteQuestion = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const question = await upvoteQuestionService({ questionId: id, userId });
+
+    res.status(200).json({
+        success: true,
+        message: 'Question upvoted successfully',
+        data: question,
+    });
+};
+
+export const downvoteQuestion = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const question = await downvoteQuestionService({ questionId: id, userId });
+
+    res.status(200).json({
+        success: true,
+        message: 'Question downvoted successfully',
         data: question,
     });
 };

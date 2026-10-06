@@ -1,21 +1,22 @@
-//getAllQuestionsService - Fetch all the questions in the database. Populate the author name
-//and tags for each question. Attach the answerCount to each question, which is the total number
-//of answers for that question. 
-import { createAppError } from '../utils/createAppError.js';
 import Question from '../models/Question.js';
 import Answer from '../models/Answer.js';
 import Tag from '../models/Tag.js';
+import { createAppError } from '../utils/createAppError.js';
 import { handleVote } from './voteService.js';
+
+//getAllQuestionsService - Fetch all the questions in the database. Populate the author name
+//and tags for each question. Attach the answerCount to each question, which is the total number
+//of answers for that question.
 
 export const getAllQuestionsService = async () => {
     const questions = await Question.find()
         .populate('author', 'name')
         .populate('tags');
 
-    // Throw a 404 AppError if no questions are found
     if (!questions || questions.length === 0) {
         throw createAppError('No questions found', 404);
-    }   
+    }
+
     return Promise.all(
         questions.map(async (question) => {
             const answerCount = await Answer.countDocuments({
@@ -60,7 +61,6 @@ export const getQuestionByIdService = async (id) => {
 //nodejs'), resolve each tag name to its ID (create the tag if it does not exist), save and return the
 //new question.
 
-
 export const createQuestionService = async ({ title, description, tags, author }) => {
     const tagNames = [...new Set(
         tags
@@ -103,9 +103,8 @@ export const updateQuestionService = async ({ id, title, description, tags, logg
         throw createAppError('Question not found', 404);
     }
 
-    if (!question.author.equals(loggedInUser.id) &&
-    !loggedInUser.isAdmin) 
-    {   throw createAppError('Not authorized to update this question', 403);
+    if (!question.author.equals(loggedInUser.id) && !loggedInUser.isAdmin) {
+        throw createAppError('Not authorized to update this question', 403);
     }
 
     const tagNames = [...new Set(
@@ -147,10 +146,7 @@ export const deleteQuestionService = async ({ id, loggedInUser }) => {
         throw createAppError('Question not found', 404);
     }
 
-    if (
-        !question.author.equals(loggedInUser.id) &&
-        !loggedInUser.isAdmin
-    ) {
+    if (!question.author.equals(loggedInUser.id) && !loggedInUser.isAdmin) {
         throw createAppError('Not authorized to delete this question', 403);
     }
 
@@ -160,24 +156,27 @@ export const deleteQuestionService = async ({ id, loggedInUser }) => {
     return question;
 };
 
+//f. upvoteQuestionService / downvoteQuestionService - Given the arguments questionId and
+//userId, call the voteService.handleVote function with the appropriate arguments. Throw a 400
+//AppError if the vote operation returns a falsy result. Return the updated question document
+//returned by voteService.handleVote.
 
-    //f. upvoteQuestionService / downvoteQuestionService - Given the arguments questionId and
-    //userId, call the voteService.handleVote function with the appropriate arguments. Throw a 400
-    //AppError if the vote operation returns a falsy result. Return the updated question document
-    //returned by voteService.handleVote.
+export const upvoteQuestionService = async ({ questionId, userId }) => {
+    const updatedQuestion = await handleVote(Question, questionId, userId, 'upvote');
 
-    export const upvoteQuestionService = async ({ questionId, userId }) => {
-        const updatedQuestion = await handleVote(Question, questionId, userId, 'upvote');
-        if (!updatedQuestion) {
-            throw createAppError('Failed to upvote question', 400);
-        }
-        return updatedQuestion;
-    };
+    if (!updatedQuestion) {
+        throw createAppError('Failed to upvote question', 400);
+    }
 
-    export const downvoteQuestionService = async ({ questionId, userId }) => {
-        const updatedQuestion = await handleVote(Question, questionId, userId, 'downvote');
-        if (!updatedQuestion) {
-            throw createAppError('Failed to downvote question', 400);
-        }
-        return updatedQuestion;
-    };
+    return updatedQuestion;
+};
+
+export const downvoteQuestionService = async ({ questionId, userId }) => {
+    const updatedQuestion = await handleVote(Question, questionId, userId, 'downvote');
+
+    if (!updatedQuestion) {
+        throw createAppError('Failed to downvote question', 400);
+    }
+
+    return updatedQuestion;
+};
